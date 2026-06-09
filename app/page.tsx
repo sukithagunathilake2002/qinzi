@@ -23,7 +23,9 @@ export default function Home() {
   const bestSellers = products.filter((product) => product.bestSelling).slice(0, 4)
 
   useEffect(() => {
-    setProducts(getStoredProducts())
+    getStoredProducts()
+      .then(setProducts)
+      .catch((error) => console.error('Failed to load products:', error))
   }, [])
 
   return (

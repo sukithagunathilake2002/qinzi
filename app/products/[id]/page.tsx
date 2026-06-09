@@ -27,7 +27,9 @@ export default function ProductPage() {
     const salePrice = product ? getDiscountedPrice(product) : 0
 
     useEffect(() => {
-        setProducts(getStoredProducts())
+        getStoredProducts()
+            .then(setProducts)
+            .catch((error) => console.error('Failed to load products:', error))
     }, [])
 
     useEffect(() => {

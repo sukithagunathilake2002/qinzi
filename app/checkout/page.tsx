@@ -44,10 +44,6 @@ export default function CheckoutPage() {
     setIsSubmitting(true)
 
     try {
-      // Simulate order submission
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Mock order creation
       const order = {
         id: `ORD-${Date.now()}`,
         customerName: formData.fullName,
@@ -63,13 +59,21 @@ export default function CheckoutPage() {
         createdAt: new Date(),
       }
 
-      // Store order (in a real app, this would go to a database)
-      const orders = JSON.parse(localStorage.getItem('niwera-orders') || '[]')
-      orders.push(order)
-      localStorage.setItem('niwera-orders', JSON.stringify(orders))
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(order),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to place order')
+      }
 
       setOrderPlaced(true)
       clearCart()
+    } catch (error) {
+      console.error('Failed to place order:', error)
+      alert('Sorry, we could not place your order. Please try again.')
     } finally {
       setIsSubmitting(false)
     }

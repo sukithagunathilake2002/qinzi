@@ -81,16 +81,26 @@ export default function AdminPage() {
     setIsLoggedIn(true)
     setAuthChecked(true)
 
-    const savedOrders = localStorage.getItem('niwera-orders')
-    if (savedOrders) {
+    const loadAdminData = async () => {
       try {
-        setOrders(JSON.parse(savedOrders))
-      } catch (e) {
-        console.error('Failed to load orders:', e)
+        const [ordersResponse, products] = await Promise.all([
+          fetch('/api/orders'),
+          getManagedProducts(),
+        ])
+
+        if (!ordersResponse.ok) {
+          throw new Error('Failed to load orders')
+        }
+
+        const loadedOrders = await ordersResponse.json() as Order[]
+        setOrders(loadedOrders)
+        setManagedProducts(products)
+      } catch (error) {
+        console.error('Failed to load admin data:', error)
       }
     }
 
-    setManagedProducts(getManagedProducts())
+    void loadAdminData()
   }, [router])
 
   const handleLogout = () => {
@@ -171,7 +181,7 @@ export default function AdminPage() {
     }
   }
 
-  const handleSaveProduct = (event: FormEvent<HTMLFormElement>) => {
+  const handleSaveProduct = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const product = buildProductFromForm()
@@ -189,13 +199,13 @@ export default function AdminPage() {
     }
 
     if (editingProduct && product.id !== editingProduct.id) {
-      deleteManagedProduct(editingProduct)
-      saveManagedProduct(product, 'custom')
+      await deleteManagedProduct(editingProduct)
+      await saveManagedProduct(product, 'custom')
     } else {
-      saveManagedProduct(product, editingProduct?.source ?? 'custom')
+      await saveManagedProduct(product, editingProduct?.source ?? 'custom')
     }
 
-    setManagedProducts(getManagedProducts())
+    setManagedProducts(await getManagedProducts())
     alert(editingProduct ? 'Product updated successfully!' : 'Product added successfully!')
     resetProductForm()
     setActiveTab('products')
@@ -224,21 +234,30 @@ export default function AdminPage() {
     setActiveTab('add-product')
   }
 
-  const handleDeleteProduct = (product: ManagedProduct) => {
+  const handleDeleteProduct = async (product: ManagedProduct) => {
     const confirmed = window.confirm(`Delete ${product.name}?`)
     if (!confirmed) return
 
-    deleteManagedProduct(product)
-    setManagedProducts(getManagedProducts())
+    await deleteManagedProduct(product)
+    setManagedProducts(await getManagedProducts())
   }
 
-  const handleStatusChange = (orderId: string, status: 'Pending' | 'Accepted' | 'Rejected') => {
+  const handleStatusChange = async (orderId: string, status: 'Pending' | 'Accepted' | 'Rejected') => {
     const updatedOrders = orders.map((order) =>
       order.id === orderId ? { ...order, status } : order
     )
 
     setOrders(updatedOrders)
-    localStorage.setItem('niwera-orders', JSON.stringify(updatedOrders))
+
+    const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+
+    if (!response.ok) {
+      console.error('Failed to update order status')
+    }
   }
 
   const handleSizeToggle = (size: string) => {
