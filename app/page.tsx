@@ -72,19 +72,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Featured Products */}
-        <div className="mb-16 sm:mb-20 text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-foreground mb-4 mx-auto">
-            Featured Collection
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-
         {/* Sales Section */}
         <div className="mb-16 sm:mb-20 text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-foreground mb-4 mx-auto">
