@@ -48,7 +48,9 @@ export function ProductCollection({
   const allSizes = isSlippersCategory ? SLIPPER_SIZE_OPTIONS : CLOTHING_SIZE_OPTIONS
 
   useEffect(() => {
-    setAllProducts(getStoredProducts())
+    getStoredProducts()
+      .then(setAllProducts)
+      .catch((error) => console.error('Failed to load products:', error))
   }, [])
 
   useEffect(() => {
