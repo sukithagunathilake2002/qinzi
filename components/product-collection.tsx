@@ -6,7 +6,6 @@ import { ChevronDown } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/product-card'
-import { PRODUCTS } from '@/lib/products'
 import { getStoredProducts } from '@/lib/product-storage'
 import { getDiscountedPrice, hasDiscount } from '@/lib/pricing'
 import { Product } from '@/lib/types'
@@ -33,7 +32,8 @@ export function ProductCollection({
   const searchTerm = searchParams.get('search')?.toLowerCase() ?? ''
   const initialCategory = category ?? (categoryParam ? normalizeCategory(categoryParam) : null)
 
-  const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS)
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<Product['category'] | null>(initialCategory)
   const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
@@ -51,6 +51,7 @@ export function ProductCollection({
     getStoredProducts()
       .then(setAllProducts)
       .catch((error) => console.error('Failed to load products:', error))
+      .finally(() => setIsLoadingProducts(false))
   }, [])
 
   useEffect(() => {
@@ -290,7 +291,11 @@ export function ProductCollection({
               </p>
             </div>
 
-            {filteredProducts.length > 0 ? (
+            {isLoadingProducts ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg">Loading products...</p>
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />

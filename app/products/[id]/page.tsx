@@ -3,12 +3,12 @@
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { PRODUCTS } from '@/lib/products'
 import { getStoredProducts } from '@/lib/product-storage'
 import { formatPrice, getDiscountedPrice, hasDiscount } from '@/lib/pricing'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { useCart } from '@/lib/cart-context'
+import { Product } from '@/lib/types'
 import { useEffect, useState } from 'react'
 import { Heart, ShoppingBag, ArrowLeft, X } from 'lucide-react'
 
@@ -16,7 +16,8 @@ export default function ProductPage() {
     const params = useParams()
     const id = params.id as string
     const { addItem } = useCart()
-    const [products, setProducts] = useState(PRODUCTS)
+    const [products, setProducts] = useState<Product[]>([])
+    const [isLoadingProducts, setIsLoadingProducts] = useState(true)
     const product = products.find((p) => p.id === id)
     const [quantity, setQuantity] = useState(1)
     const [selectedSize, setSelectedSize] = useState('')
@@ -30,6 +31,7 @@ export default function ProductPage() {
         getStoredProducts()
             .then(setProducts)
             .catch((error) => console.error('Failed to load products:', error))
+            .finally(() => setIsLoadingProducts(false))
     }, [])
 
     useEffect(() => {
@@ -53,6 +55,18 @@ export default function ProductPage() {
             event.preventDefault()
             action()
         }
+    }
+
+    if (isLoadingProducts) {
+        return (
+            <div className="min-h-screen bg-background">
+                <Header />
+                <div className="flex min-h-[60vh] items-center justify-center">
+                    <p className="text-muted-foreground text-lg">Loading product...</p>
+                </div>
+                <Footer />
+            </div>
+        )
     }
 
     if (!product) {
