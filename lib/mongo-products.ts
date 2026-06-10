@@ -7,6 +7,7 @@ import type { ManagedProduct } from './product-storage'
 type ProductDocument = ManagedProduct & {
   createdAt?: Date
   updatedAt?: Date
+  deletedAt?: Date
 }
 
 async function getProductsCollection(): Promise<Collection<ProductDocument>> {
@@ -39,7 +40,7 @@ async function seedDefaultProducts() {
 }
 
 function stripMongoFields(product: ProductDocument): ManagedProduct {
-  const { createdAt, updatedAt, ...managedProduct } = product
+  const { createdAt, updatedAt, deletedAt, ...managedProduct } = product
   return managedProduct
 }
 
@@ -47,7 +48,7 @@ export async function getMongoManagedProducts(): Promise<ManagedProduct[]> {
   await seedDefaultProducts()
 
   const collection = await getProductsCollection()
-  const products = await collection.find({}, { projection: { _id: 0 } }).toArray()
+  const products = await collection.find({ deletedAt: { $exists: false } }, { projection: { _id: 0 } }).toArray()
   const productOrder = new Map(PRODUCTS.map((product, index) => [product.id, index]))
 
   return products
@@ -73,6 +74,9 @@ export async function saveMongoManagedProduct(product: Product, source: ManagedP
         source,
         updatedAt: now,
       },
+      $unset: {
+        deletedAt: '',
+      },
       $setOnInsert: {
         createdAt: now,
       },
@@ -83,5 +87,15 @@ export async function saveMongoManagedProduct(product: Product, source: ManagedP
 
 export async function deleteMongoManagedProduct(id: string) {
   const collection = await getProductsCollection()
-  await collection.deleteOne({ id })
+  const now = new Date()
+
+  await collection.updateOne(
+    { id },
+    {
+      $set: {
+        deletedAt: now,
+        updatedAt: now,
+      },
+    }
+  )
 }

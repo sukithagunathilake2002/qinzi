@@ -240,6 +240,7 @@ export default function AdminPage() {
 
     await deleteManagedProduct(product)
     setManagedProducts(await getManagedProducts())
+    alert('Product deleted successfully!')
   }
 
   const handleStatusChange = async (orderId: string, status: 'Pending' | 'Accepted' | 'Rejected') => {
