@@ -41,7 +41,7 @@ export function ProductCollection({
   const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState([0, 30000])
-  const [showFilters, setShowFilters] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
 
   const lockedCategory = collectionType === 'category' ? category : null
   const activeCategory = lockedCategory ?? selectedCategory
@@ -180,8 +180,7 @@ export function ProductCollection({
               <ChevronDown size={20} className={`transition ${showFilters ? 'rotate-180' : ''}`} />
             </button>
 
-            {showFilters && (
-              <div className="space-y-6">
+            <div className={`${showFilters ? 'block' : 'hidden'} space-y-6 lg:block`}>
                 {!lockedCategory && (
                   <div>
                     <h3 className="font-semibold text-foreground mb-3">Category</h3>
@@ -285,7 +284,6 @@ export function ProductCollection({
                   Reset Filters
                 </button>
               </div>
-            )}
           </div>
           )}
 
