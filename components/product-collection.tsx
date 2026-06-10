@@ -20,20 +20,23 @@ interface ProductCollectionProps {
   title?: string
   collectionType?: CollectionType
   category?: Product['category']
+  initialProducts?: Product[]
 }
 
 export function ProductCollection({
   title = 'Products',
   collectionType = 'all',
   category,
+  initialProducts,
 }: ProductCollectionProps) {
   const searchParams = useSearchParams()
   const categoryParam = searchParams.get('category')
   const searchTerm = searchParams.get('search')?.toLowerCase() ?? ''
   const initialCategory = category ?? (categoryParam ? normalizeCategory(categoryParam) : null)
 
-  const [allProducts, setAllProducts] = useState<Product[]>([])
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+  const hasInitialProducts = initialProducts !== undefined
+  const [allProducts, setAllProducts] = useState<Product[]>(initialProducts ?? [])
+  const [isLoadingProducts, setIsLoadingProducts] = useState(!hasInitialProducts)
   const [selectedCategory, setSelectedCategory] = useState<Product['category'] | null>(initialCategory)
   const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
@@ -48,11 +51,13 @@ export function ProductCollection({
   const allSizes = isSlippersCategory ? SLIPPER_SIZE_OPTIONS : CLOTHING_SIZE_OPTIONS
 
   useEffect(() => {
+    if (hasInitialProducts) return
+
     getStoredProducts()
       .then(setAllProducts)
       .catch((error) => console.error('Failed to load products:', error))
       .finally(() => setIsLoadingProducts(false))
-  }, [])
+  }, [hasInitialProducts])
 
   useEffect(() => {
     setSelectedSizes((currentSizes) => currentSizes.filter((size) => allSizes.includes(size)))

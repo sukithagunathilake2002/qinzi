@@ -10,11 +10,19 @@ type ProductDocument = ManagedProduct & {
   deletedAt?: Date
 }
 
+let productsCollectionPromise: Promise<Collection<ProductDocument>> | undefined
+let defaultProductsSeedPromise: Promise<void> | undefined
+
 async function getProductsCollection(): Promise<Collection<ProductDocument>> {
-  const db = await getDb()
-  const collection = db.collection<ProductDocument>('products')
-  await collection.createIndex({ id: 1 }, { unique: true })
-  return collection
+  if (!productsCollectionPromise) {
+    productsCollectionPromise = getDb().then(async (db) => {
+      const collection = db.collection<ProductDocument>('products')
+      await collection.createIndex({ id: 1 }, { unique: true })
+      return collection
+    })
+  }
+
+  return productsCollectionPromise
 }
 
 async function seedDefaultProducts() {
@@ -39,13 +47,24 @@ async function seedDefaultProducts() {
   )
 }
 
+async function ensureDefaultProductsSeeded() {
+  if (!defaultProductsSeedPromise) {
+    defaultProductsSeedPromise = seedDefaultProducts().catch((error) => {
+      defaultProductsSeedPromise = undefined
+      throw error
+    })
+  }
+
+  await defaultProductsSeedPromise
+}
+
 function stripMongoFields(product: ProductDocument): ManagedProduct {
   const { createdAt, updatedAt, deletedAt, ...managedProduct } = product
   return managedProduct
 }
 
 export async function getMongoManagedProducts(): Promise<ManagedProduct[]> {
-  await seedDefaultProducts()
+  await ensureDefaultProductsSeeded()
 
   const collection = await getProductsCollection()
   const products = await collection.find({ deletedAt: { $exists: false } }, { projection: { _id: 0 } }).toArray()

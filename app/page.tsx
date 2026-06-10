@@ -1,34 +1,24 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { HeroSlider } from '@/components/hero-slider'
 import { ProductCard } from '@/components/product-card'
-import { getStoredProducts } from '@/lib/product-storage'
+import { getMongoManagedProducts } from '@/lib/mongo-products'
 import { hasDiscount } from '@/lib/pricing'
-import { Product } from '@/lib/types'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function Home() {
+export const dynamic = 'force-dynamic'
+
+export default async function Home() {
   const categories = [
     { name: 'Clothing', href: '/clothing', image: '/cloth1.jpeg' },
     { name: 'Slippers', href: '/slippers', image: '/sliper1.jpeg' },
     { name: 'Jewellery', href: '/jewellery', image: '/juw1.jpeg' },
     { name: 'Customisation', href: '/customisation', image: '/custormization.jpeg' },
   ]
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+  const products = await getMongoManagedProducts()
   const saleItems = products.filter((product) => hasDiscount(product)).slice(0, 4)
   const bestSellers = products.filter((product) => product.bestSelling).slice(0, 4)
-
-  useEffect(() => {
-    getStoredProducts()
-      .then(setProducts)
-      .catch((error) => console.error('Failed to load products:', error))
-      .finally(() => setIsLoadingProducts(false))
-  }, [])
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -84,15 +74,11 @@ export default function Home() {
           <p className="max-w-2xl mx-auto text-muted-foreground mb-8">
             Discover limited-time offers on our most-loved styles. Shop now before they’re gone.
           </p>
-          {isLoadingProducts ? (
-            <p className="text-muted-foreground">Loading products...</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {saleItems.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {saleItems.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </div>
 
         {/* Best Sellers Section */}
@@ -103,15 +89,11 @@ export default function Home() {
           <p className="max-w-2xl mx-auto text-muted-foreground mb-8">
             Our most popular picks, loved by customers for their style, comfort, and quality.
           </p>
-          {isLoadingProducts ? (
-            <p className="text-muted-foreground">Loading products...</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {bestSellers.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {bestSellers.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </div>
 
         {/* CTA Section */}
